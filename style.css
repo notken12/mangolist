@@ -5,12 +5,15 @@
 
 body {
     font-family: "IBM Plex Mono";
+    margin: 0;
+    padding: 8px;
 }
 
 #title {
     margin-top: 20vh;
     font-size: 500%;
     text-align: center;
+    user-select: none;
 }
 
 button, input {
@@ -23,10 +26,63 @@ button, input {
 }
 
 #task-input {
-    margin-right: 16px;
     padding: 8px;
     width: 300px;
     max-width: 70vw;
     border: solid 1px #777;
     border-radius: 4px;
+    margin-right: -16px;
+}
+
+#task-area {
+    display: flex;
+    flex-direction: row;
+    max-width: 816px;
+    margin: 0 auto;
+    margin-top: 30px;
+}
+
+.task-group {
+    border: 1px gray solid;
+    border-radius: 4px;
+    width: 50%;
+    margin: 8px;
+    padding: 16px;
+}
+
+.task-group li {
+    list-style: none;
+    padding: 4px;
+}
+
+.task-group ul {
+    padding: 0;
+}
+
+.task-group h2 {
+    margin: 0;
+    user-select: none;
+}
+
+.task-group li p {
+    display: inline;
+    margin-left: 16px;
+}
+
+.task-group li input {
+    width: 16px;
+    height: 16px;
+    margin-top: 0;
+    position: relative;
+    top: 2px;
+}
+
+#create-task {
+    border: none;
+    background: none;
+    position: relative;
+    left: -20px;
+    top: 2px;
+    border: none;
+    outline: none;
 }

@@ -1,0 +1,13 @@
+@media only screen and (max-width: 832px){
+    body {
+        
+    }
+
+    #task-area {
+        flex-direction: column;
+    }
+
+    .task-group {
+        width: calc(100% - 48px);
+    }
+}
