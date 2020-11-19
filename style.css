@@ -67,14 +67,21 @@ button, input {
 .task-group li p {
     display: inline;
     margin-left: 16px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .task-group li input {
     width: 16px;
     height: 16px;
-    margin-top: 0;
     position: relative;
     top: 2px;
+    cursor: pointer;
+}
+
+.task-group input[type="checkbox"]:checked + p {
+    color: gray;
+    text-decoration: line-through;
 }
 
 #create-task {
@@ -86,3 +93,4 @@ button, input {
     border: none;
     outline: none;
 }
+

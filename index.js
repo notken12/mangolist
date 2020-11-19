@@ -1,4 +1,5 @@
-(function(global){
+(function (global) {
+
     class Task {
         constructor(content, done) {
             this.content = content || "";
@@ -50,7 +51,7 @@
 
             title.text(group.name);
 
-            group.tasks.forEach(function(task) {
+            group.tasks.forEach(function (task) {
                 var li = document.createElement("li");
                 var p = document.createElement("p");
 
@@ -58,6 +59,17 @@
 
                 var checkbox = document.createElement("input");
                 checkbox.type = "checkbox";
+
+                checkbox.checked = task.done;
+
+                checkbox.addEventListener("change", function () {
+                    task.done = this.checked;
+                });
+                p.addEventListener("click", function () {
+                    task.done = !task.done;
+                    el.updateView(group);
+                });
+
                 li.appendChild(checkbox);
                 li.appendChild(p);
 
