@@ -8,33 +8,61 @@
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+    <script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
+
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="mobile.css">
+
+    
 </head>
 
 <body>
     <h1 id="title">MangoList</h1>
 
-    <div id="new-task-container">
-        <input type="text" id="task-input">
+    <!--<div id="sign-in">
+        <input type="email" id="email-input">
+        <input type="password" id="password-input">
 
-        <button id="create-task">
-            <i class="material-icons">add_task</i>
-        </button>
+        <button id="sign-up">Sign Up</button>
+        <button id="sign-in">Sign In</button>
+    </div>-->
+
+    <div id="firebaseui-auth-container"></div>
+    <div id="loader">Loading...</div>
+
+    <div id="main-container" style="display:none;">
+        <div id="new-task-container">
+            <input type="text" id="task-input">
+
+            <button id="create-task">
+                <i class="material-icons">add_task</i>
+            </button>
+        </div>
+        
+        <div id="task-area"></div>
     </div>
 
+    
 
 
-    <div id="task-area"></div>
+
+    
 
 
     <!-- The core Firebase JS SDK is always required and must be listed first -->
-    <script defer src="https://www.gstatic.com/firebasejs/8.0.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.2/firebase-app.js"></script>
 
-    <script defer src="https://www.gstatic.com/firebasejs/8.0.2/firebase-auth.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/8.0.2/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.2/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.2/firebase-firestore.js"></script>
+    
+    <script src="init-firebase.js"></script>
 
     <script src="jquery-3.5.1.min.js"></script>
+
+    <script src="auth/email.js"></script>
+    <script src="auth/firebaseui.js"></script>
+
     <script src="index.js"></script>
 </body>
 

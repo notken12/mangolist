@@ -20,6 +20,10 @@ button, input {
     font-family: "IBM Plex Mono";
 }
 
+button {
+    user-select: none;    
+}
+
 #new-task-container {
     display: flex;
     justify-content: center;
@@ -53,6 +57,7 @@ button, input {
 .task-group li {
     list-style: none;
     padding: 4px;
+    display: flex;
 }
 
 .task-group ul {
@@ -66,22 +71,39 @@ button, input {
 
 .task-group li p {
     display: inline;
+    margin: 0;
     margin-left: 16px;
     cursor: pointer;
     user-select: none;
+    margin-top: 1px;
 }
 
 .task-group li input {
     width: 16px;
     height: 16px;
     position: relative;
-    top: 2px;
     cursor: pointer;
 }
 
 .task-group input[type="checkbox"]:checked + p {
     color: gray;
     text-decoration: line-through;
+}
+
+.task-group li button {
+    background: none;
+    border: none;
+    padding: 0;
+    position: relative;
+    top: -1px;
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin-left: 14px;
+}
+
+.task-group li p:hover + button {
+    display: block;
 }
 
 #create-task {
@@ -94,3 +116,19 @@ button, input {
     outline: none;
 }
 
+#sign-in {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#sign-in input {
+    display: block;
+    width: 200px;
+    margin: 8px auto;
+    padding: 8px;
+}
+
+#loader {
+    text-align: center;
+}
