@@ -6,4 +6,8 @@
     .task-group {
         width: calc(100% - 48px);
     }
+
+    #title {
+        font-size: 300%;
+    }
 }
