@@ -222,7 +222,7 @@ function isNullOrWhitespace(str) {
 
 
             userRef.update({
-                name: user.displayName,
+                displayName: user.displayName,
                 email: user.email,
                 //password: user.password
             })
