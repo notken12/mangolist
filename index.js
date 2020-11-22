@@ -35,15 +35,15 @@ function isNullOrWhitespace(str) {
                     this.tasks.push(task);
                     this.done = false;
                 }
-                getTasksAsStrings() {
+                getTaskObjectsForDb() {
                     var result = [];
                     this.tasks.forEach(function(task){
-                        result.push(task.content);
+                        result.push({
+                            content: task.content,
+                            done: task.done
+                        });
                     });
                     return result;
-                }
-                updateDB() {
-                    
                 }
             }
 
@@ -53,6 +53,8 @@ function isNullOrWhitespace(str) {
                 TASKAREA: $("#task-area"),
                 MAINCONTAINER: $("#main-container"),
                 FIREBASEUI: $("#firebaseui-auth-container"),
+                CREATEGROUP: $("#create-group"),
+                GROUPINPUT: $("#group-input"),
                 updateView: function (group) {
                     var that = this;
                     var ul, title;
@@ -93,10 +95,14 @@ function isNullOrWhitespace(str) {
 
                         checkbox.addEventListener("change", function () {
                             task.done = this.checked;
+
+                            updateMainGroupDb();
                         });
                         p.addEventListener("click", function () {
                             task.done = !task.done;
                             el.updateView(group);
+
+                            updateMainGroupDb();
                         });
 
                         var del = document.createElement("button");
@@ -107,15 +113,7 @@ function isNullOrWhitespace(str) {
                             group.tasks.splice(i, 1);
                             el.updateView(group);
 
-                            db.collection("users").doc(uid).set({
-                                tasks: mainGroup.getTasksAsStrings()
-                            }, {merge: true})
-                            .then(function() {
-                                console.log("Document successfully written!");
-                            })
-                            .catch(function(error) {
-                                console.error("Error writing document: ", error);
-                            });
+                            updateMainGroupDb();
                         });
 
                         li.appendChild(checkbox);
@@ -127,7 +125,7 @@ function isNullOrWhitespace(str) {
                 }
             }
 
-
+            const userRef = db.collection("users").doc(uid);
             const taskGroups = [];
             taskGroups.updateAllViews = function () {
                 taskGroups.forEach(function (group) {
@@ -135,11 +133,57 @@ function isNullOrWhitespace(str) {
                 });
             }
 
+            function updateMainGroupDb () {
+                userRef.update({
+                    tasks: mainGroup.getTaskObjectsForDb()
+                })
+                .then(function() {
+                    console.log("Document successfully written!");
+                })
+                .catch(function(error) {
+                    console.error("Error writing document: ", error);
+                });
+            }
+
+            function newTaskGroup (name) {
+                var group = new TaskGroup(name);
+                taskGroups.push(group);
+
+                var model = {
+                    name: group.name,
+                    tasks: [],
+                    done: false,
+                    users: {
+                        
+                    }
+                };
+                model.users[uid] = {
+                    admin: true
+                }
+                
+
+                db.collection("taskgroups").add(model)
+                .then(function (docRef) {
+                    group.id = docRef.id;
+
+                    userRef.update({
+                        taskgroups: firebase.firestore.FieldValue.arrayUnion(docRef.id)
+                    })
+                    .then(function () {
+                        el.updateView(group);
+                    });
+                })
+                .catch(function(error) {
+                    console.error("Error adding document: ", error);
+                });
+
+                
+            }
+
             const mainGroup = new TaskGroup("Tasks");
             const d = new TaskGroup("bruh tasks");
 
             taskGroups.push(mainGroup);
-            taskGroups.push(d);
 
             d.addTask(new Task("pet mango"));
 
@@ -155,15 +199,15 @@ function isNullOrWhitespace(str) {
                 el.TASKINPUT.val("");
                 el.updateView(mainGroup);
 
-                db.collection("users").doc(uid).set({
-                    tasks: mainGroup.getTasksAsStrings()
-                }, {merge: true})
-                .then(function() {
-                    console.log("Document successfully written!");
-                })
-                .catch(function(error) {
-                    console.error("Error writing document: ", error);
-                });
+                updateMainGroupDb();
+            }
+
+            function newTaskGroupFromInput() {
+                if (isNullOrWhitespace(el.GROUPINPUT.val()))
+                    return;
+
+                newTaskGroup(el.GROUPINPUT.val());
+                el.GROUPINPUT.val("");
             }
 
             el.CREATETASK.click(newTaskFromInput);
@@ -173,11 +217,15 @@ function isNullOrWhitespace(str) {
                 }
             });
 
-            db.collection("users").doc(uid).set({
+            el.CREATEGROUP.click(newTaskGroupFromInput);
+
+
+
+            userRef.update({
                 name: user.displayName,
                 email: user.email,
                 //password: user.password
-            }, {merge: true})
+            })
             .then(function() {
                 console.log("Document successfully written!");
             })
@@ -185,12 +233,37 @@ function isNullOrWhitespace(str) {
                 console.error("Error writing document: ", error);
             });
 
-            db.collection("users").doc(uid).get().then(function (doc) {
+            userRef.get().then(function (doc) {
                 if (doc.exists) {
                     var tasks = doc.data().tasks;
-                    tasks.forEach(function (task) {
-                        mainGroup.tasks.push(new Task(task));
-                    });
+                    if (tasks != null) {
+                        tasks.forEach(function (task) {
+                            if (task.content) {
+                                mainGroup.tasks.push(new Task(task.content, task.done));
+                            } else{
+                                mainGroup.tasks.push(new Task(task));
+
+                            }
+                        });
+                    }
+                    var groupIds = doc.data().taskgroups;
+                    if (groupIds != null) {
+                        groupIds.forEach(function (groupId) {
+                            db.collection("taskgroups").doc(groupId)
+                                .onSnapshot(function (doc) {
+                                    var group = doc.data();
+                                    var g = new TaskGroup(group.name, [], group.done, doc.id);
+                                    group.tasks.forEach(function (task) {
+                                        g.tasks.push(new Task(task.name, task.done));
+                                    });
+
+                                    taskGroups.push(g);
+                                    el.updateView(g);
+                                });
+
+                        });
+                    }
+                    
 
                     el.updateView(mainGroup);
                 }
