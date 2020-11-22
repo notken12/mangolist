@@ -254,7 +254,7 @@ function isNullOrWhitespace(str) {
                                     var group = doc.data();
                                     var g = new TaskGroup(group.name, [], group.done, doc.id);
                                     group.tasks.forEach(function (task) {
-                                        g.tasks.push(new Task(task.name, task.done));
+                                        g.tasks.push(new Task(task.content, task.done));
                                     });
 
                                     taskGroups.push(g);
