@@ -29,7 +29,9 @@ function isNullOrWhitespace(str) {
                     this.tasks = tasks || [];
                     this.done = done || false;
                     this.id = id;
-                    this.el = el;
+                    if (el) {
+                        this.el = el;
+                    }
                 }
                 addTask(task) {
                     this.tasks.push(task);
@@ -37,7 +39,7 @@ function isNullOrWhitespace(str) {
                 }
                 getTaskObjectsForDb() {
                     var result = [];
-                    this.tasks.forEach(function(task){
+                    this.tasks.forEach(function (task) {
                         result.push({
                             content: task.content,
                             done: task.done
@@ -45,9 +47,29 @@ function isNullOrWhitespace(str) {
                     });
                     return result;
                 }
+                updateDb() {
+                    if (this.id) {
+                        db.collection("taskgroups").doc(this.id).update({
+                            name: this.name,
+                            tasks: this.getTaskObjectsForDb(),
+                            done: this.done
+                        })
+                            .then(function () {
+                                console.log("Document successfully written!");
+                            })
+                            .catch(function (error) {
+                                console.error("Error writing document: ", error);
+                            });
+
+                    }
+                }
             }
 
             const el = {
+                messages: {
+                    NEWGROUP: "New group",
+                    NEWTASK: "Add a task"
+                },
                 TASKINPUT: $("#task-input"),
                 CREATETASK: $("#create-task"),
                 TASKAREA: $("#task-area"),
@@ -69,10 +91,24 @@ function isNullOrWhitespace(str) {
 
                         ul = $(document.createElement("ul"));
                         group.el.append(ul);
-                        that.TASKAREA.append(group.el);
+
+                        if (taskGroups.focused == taskGroups.indexOf(group)) {
+                            group.el.addClass("focused");
+                        }
+
+                        group.el.dblclick(function () {
+                            taskGroups.setFocus(taskGroups.indexOf(group));
+
+                        });
+                        that.TASKAREA.prepend(group.el);
 
                     }
                     else {
+                        if (taskGroups.focused == taskGroups.indexOf(group)) {
+                            group.el.addClass("focused");
+                        } else {
+                            group.el.removeClass("focused");
+                        }
 
                         ul = group.el.find("ul");
                         title = group.el.find("h2");
@@ -95,14 +131,14 @@ function isNullOrWhitespace(str) {
 
                         checkbox.addEventListener("change", function () {
                             task.done = this.checked;
-
-                            updateMainGroupDb();
+                            
+                            group.updateDb();
                         });
                         p.addEventListener("click", function () {
                             task.done = !task.done;
                             el.updateView(group);
 
-                            updateMainGroupDb();
+                            group.updateDb();
                         });
 
                         var del = document.createElement("button");
@@ -113,7 +149,7 @@ function isNullOrWhitespace(str) {
                             group.tasks.splice(i, 1);
                             el.updateView(group);
 
-                            updateMainGroupDb();
+                            group.updateDb();
                         });
 
                         li.appendChild(checkbox);
@@ -127,65 +163,129 @@ function isNullOrWhitespace(str) {
 
             const userRef = db.collection("users").doc(uid);
             const taskGroups = [];
+            taskGroups.focused = -1;
+            taskGroups.setFocus = function (i) {
+                var prev = taskGroups.focused + 0;
+
+                taskGroups.focused = i;
+
+                if (i >= 0) {
+                    el.updateView(taskGroups[i]);
+                    el.CREATETASK.text("add_task");
+
+                    el.TASKINPUT.attr("placeholder", el.messages.NEWTASK);
+                } else {
+                    el.CREATETASK.text("create_new_folder");
+                    el.TASKINPUT.attr("placeholder", el.messages.NEWGROUP);
+                }
+                if (prev >= 0)
+                    el.updateView(taskGroups[prev]);
+            }
+
+            taskGroups.deleteGroup = function (i) {
+                if (i < 0) {
+                    return;
+                }
+
+                var g = taskGroups[i];
+                if (g == mainGroup)
+                    return;
+                if (g.el) 
+                    g.el.remove();
+                
+                userRef.update({
+                    taskgroups: firebase.firestore.FieldValue.arrayRemove(g.id)
+                })
+                .then(function () {
+                    console.log("Document successfully written!");
+                })
+                .catch(function (error) {
+                    console.error("Error writing document: ", error);
+                });
+                db.collection("taskgroups").doc(g.id).delete()
+                .then(function () {
+                    console.log("Document successfully written!");
+                })
+                .catch(function (error) {
+                    console.error("Error writing document: ", error);
+                });
+
+                taskGroups.splice(i, 1);
+                taskGroups.setFocus(-1);
+            }
+
+            taskGroups.setFocus(-1);
+
+            taskGroups.getIndexById = function (id) {
+                for (var i = 0; i < taskGroups.length; i++) {
+                    if (taskGroups[i].id == id) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
             taskGroups.updateAllViews = function () {
                 taskGroups.forEach(function (group) {
                     el.updateView(group);
                 });
             }
 
-            function updateMainGroupDb () {
-                userRef.update({
-                    tasks: mainGroup.getTaskObjectsForDb()
-                })
-                .then(function() {
-                    console.log("Document successfully written!");
-                })
-                .catch(function(error) {
-                    console.error("Error writing document: ", error);
-                });
-            }
-
-            function newTaskGroup (name) {
+            function newTaskGroup(name) {
                 var group = new TaskGroup(name);
-                taskGroups.push(group);
+                taskGroups.unshift(group);
+                el.updateView(group);
 
                 var model = {
                     name: group.name,
                     tasks: [],
                     done: false,
                     users: {
-                        
+
                     }
                 };
                 model.users[uid] = {
                     admin: true
                 }
-                
+
 
                 db.collection("taskgroups").add(model)
-                .then(function (docRef) {
-                    group.id = docRef.id;
+                    .then(function (docRef) {
+                        group.id = docRef.id;
 
-                    userRef.update({
-                        taskgroups: firebase.firestore.FieldValue.arrayUnion(docRef.id)
+                        userRef.update({
+                            taskgroups: firebase.firestore.FieldValue.arrayUnion(docRef.id)
+                        })
+                            .then(function () {
+                                el.updateView(group);
+                            });
                     })
-                    .then(function () {
-                        el.updateView(group);
+                    .catch(function (error) {
+                        console.error("Error adding document: ", error);
                     });
-                })
-                .catch(function(error) {
-                    console.error("Error adding document: ", error);
-                });
 
-                
+
             }
 
-            const mainGroup = new TaskGroup("Tasks");
-            const d = new TaskGroup("bruh tasks");
+            const mainGroup = new TaskGroup("My Tasks", [], false, undefined, $("#main-group"));
+
+            mainGroup.el.dblclick(function () {
+                taskGroups.setFocus(taskGroups.indexOf(mainGroup));
+
+            });
+
+            mainGroup.updateDb = function () {
+                userRef.update({
+                    tasks: mainGroup.getTaskObjectsForDb()
+                })
+                    .then(function () {
+                        console.log("Document successfully written!");
+                    })
+                    .catch(function (error) {
+                        console.error("Error writing document: ", error);
+                    });
+            }
 
             taskGroups.push(mainGroup);
-
-            d.addTask(new Task("pet mango"));
 
             taskGroups.updateAllViews();
 
@@ -193,21 +293,34 @@ function isNullOrWhitespace(str) {
                 if (isNullOrWhitespace(el.TASKINPUT.val()))
                     return;
 
-                var task = new Task(el.TASKINPUT.val());
-                mainGroup.addTask(task);
+                if (taskGroups.focused >= 0) {
+                    //add task to group
 
-                el.TASKINPUT.val("");
-                el.updateView(mainGroup);
+                    var g = taskGroups[taskGroups.focused];
 
-                updateMainGroupDb();
+                    var task = new Task(el.TASKINPUT.val());
+                    g.addTask(task);
+
+                    el.TASKINPUT.val("");
+                    el.updateView(g);
+
+                    g.updateDb();
+                } else if (taskGroups.focused == -1) {
+                    //new group
+                    newTaskGroupFromInput();
+
+                }
+
+
+
             }
 
             function newTaskGroupFromInput() {
-                if (isNullOrWhitespace(el.GROUPINPUT.val()))
+                if (isNullOrWhitespace(el.TASKINPUT.val()))
                     return;
 
-                newTaskGroup(el.GROUPINPUT.val());
-                el.GROUPINPUT.val("");
+                newTaskGroup(el.TASKINPUT.val());
+                el.TASKINPUT.val("");
             }
 
             el.CREATETASK.click(newTaskFromInput);
@@ -219,19 +332,47 @@ function isNullOrWhitespace(str) {
 
             el.CREATEGROUP.click(newTaskGroupFromInput);
 
+            $("body").click(function (e) {
+                if (e.target == document.body || 
+                    e.target == $("#title")[0] || 
+                    e.target.parentElement == $("#title")[0] ||
+                    e.target == el.MAINCONTAINER[0] ||
+                    e.target == $("#new-task-container")[0])
+                    taskGroups.setFocus(-1);
+            });
 
+            var timeoutId = 0;
+            $("body").keydown(function (e) {
+                if (e.key == "Escape") {
+                    taskGroups.setFocus(-1);
+                } else if (e.key == "Delete" && taskGroups.focused >= 0) {
+                    if (taskGroups.focused >= 0 && taskGroups[taskGroups.focused] != mainGroup) {
+                        taskGroups[taskGroups.focused].el.addClass("to-be-deleted");
+                    }
+                    timeoutId = setTimeout(function () {
+                        taskGroups.deleteGroup(taskGroups.focused);
+                    }, 3000);
+                }
+            }).keyup(function (e) {
+                if (e.key == "Delete") {
+                    clearTimeout(timeoutId);
+
+                    if (taskGroups.focused >= 0 && taskGroups[taskGroups.focused] != mainGroup) {
+                        taskGroups[taskGroups.focused].el.removeClass("to-be-deleted");
+                    }
+                }
+            })
 
             userRef.update({
                 displayName: user.displayName,
-                email: user.email,
-                //password: user.password
+                email: user.email
             })
-            .then(function() {
-                console.log("Document successfully written!");
-            })
-            .catch(function(error) {
-                console.error("Error writing document: ", error);
-            });
+                .then(function () {
+                    console.log("Document successfully written!");
+                })
+                .catch(function (error) {
+                    console.error("Error writing document: ", error);
+                });
 
             userRef.get().then(function (doc) {
                 if (doc.exists) {
@@ -240,7 +381,7 @@ function isNullOrWhitespace(str) {
                         tasks.forEach(function (task) {
                             if (task.content) {
                                 mainGroup.tasks.push(new Task(task.content, task.done));
-                            } else{
+                            } else {
                                 mainGroup.tasks.push(new Task(task));
 
                             }
@@ -257,13 +398,20 @@ function isNullOrWhitespace(str) {
                                         g.tasks.push(new Task(task.content, task.done));
                                     });
 
-                                    taskGroups.push(g);
-                                    el.updateView(g);
+                                    var i = taskGroups.getIndexById(doc.id);
+
+                                    if (i >= 0) {
+                                        taskGroups[i] = Object.assign(taskGroups[i], g);
+                                        el.updateView(taskGroups[i]);
+                                    } else {
+                                        taskGroups.push(g);
+                                        el.updateView(g);
+                                    }
                                 });
 
                         });
                     }
-                    
+
 
                     el.updateView(mainGroup);
                 }
@@ -271,7 +419,7 @@ function isNullOrWhitespace(str) {
                     //doc.data() is undefined
                     console.log("Document doesn't exist!")
                 }
-            }).catch(function(error) {
+            }).catch(function (error) {
                 console.log("Error getting document:", error);
             });
 

@@ -59,9 +59,9 @@ button {
 #task-area {
     display: flex;
     flex-direction: column;
-    max-width: 816px;
+    max-width: 800px;
     margin: 0 auto;
-    margin-top: 16px;
+    margin-top: 8px;
 }
 
 .task-group {
@@ -69,6 +69,7 @@ button {
     border-radius: 4px;
     margin: 8px;
     padding: 16px;
+    transition: background-color 100ms linear;
 }
 
 .task-group li {
@@ -126,9 +127,6 @@ button {
 #create-task {
     border: none;
     background: none;
-    position: relative;
-    left: -2px;
-    top: 2px;
     border: none;
     outline: none;
 }
@@ -148,4 +146,21 @@ button {
 
 #loader {
     text-align: center;
+}
+
+#main-group {
+    max-width: 750px;
+    margin: 0 auto;
+    margin-top: 16px;
+}
+
+.task-group.focused {
+    border: 1px white solid;
+    border-radius: 4px;
+    position: relative;
+    background: #222;
+}
+
+.task-group.to-be-deleted {
+    background: rgb(65, 0, 0);
 }
