@@ -79,18 +79,36 @@ function isNullOrWhitespace(str) {
                 GROUPINPUT: $("#group-input"),
                 updateView: function (group) {
                     var that = this;
-                    var ul, title;
+                    var ul, title, deleteButton, hint;
 
                     if (!group.el) {
                         var div = document.createElement("div");
                         group.el = $(div);
                         group.el.addClass("task-group")
 
-                        title = $(document.createElement("h2"));
-                        group.el.append(title);
+                        var h2 = document.createElement("h2");
+                        title = $(document.createElement("span"));
+                        deleteButton = $(document.createElement("button"));
+
+                        deleteButton.text("delete");
+
+                        deleteButton.addClass("material-icons");
+                        deleteButton.click(function () {
+                            taskGroups.deleteGroup(taskGroups.indexOf(group));
+                        });
+
+                        group.el.append(h2);
+                        h2.appendChild(title[0]);
+                        h2.appendChild(deleteButton[0]);
 
                         ul = $(document.createElement("ul"));
                         group.el.append(ul);
+
+                        hint = $(document.createElement("div"));
+                        hint.text("Double-click to select and add a task");
+                        hint.addClass("hint-add-task");
+
+                        group.el.append(hint);
 
                         if (taskGroups.focused == taskGroups.indexOf(group)) {
                             group.el.addClass("focused");
@@ -111,7 +129,9 @@ function isNullOrWhitespace(str) {
                         }
 
                         ul = group.el.find("ul");
-                        title = group.el.find("h2");
+                        title = group.el.find("h2 span");
+                        button = group.el.find("h2 button");
+                        hint = group.el.find(".hint-add-task");
 
                         ul.empty();
                     }
@@ -158,6 +178,10 @@ function isNullOrWhitespace(str) {
 
                         ul.append(li);
                     });
+
+                    if (group.tasks.length > 0) {
+                        hint.hide();
+                    }
                 }
             }
 
@@ -392,21 +416,25 @@ function isNullOrWhitespace(str) {
                         groupIds.forEach(function (groupId) {
                             db.collection("taskgroups").doc(groupId)
                                 .onSnapshot(function (doc) {
-                                    var group = doc.data();
-                                    var g = new TaskGroup(group.name, [], group.done, doc.id);
-                                    group.tasks.forEach(function (task) {
-                                        g.tasks.push(new Task(task.content, task.done));
-                                    });
+                                    
+                                    if (doc.exists) {
+                                        var group = doc.data();
+                                        var g = new TaskGroup(group.name, [], group.done, doc.id);
+                                        group.tasks.forEach(function (task) {
+                                            g.tasks.push(new Task(task.content, task.done));
+                                        });
 
-                                    var i = taskGroups.getIndexById(doc.id);
+                                        var i = taskGroups.getIndexById(doc.id);
 
-                                    if (i >= 0) {
-                                        taskGroups[i] = Object.assign(taskGroups[i], g);
-                                        el.updateView(taskGroups[i]);
-                                    } else {
-                                        taskGroups.push(g);
-                                        el.updateView(g);
+                                        if (i >= 0) {
+                                            taskGroups[i] = Object.assign(taskGroups[i], g);
+                                            el.updateView(taskGroups[i]);
+                                        } else {
+                                            taskGroups.push(g);
+                                            el.updateView(g);
+                                        }
                                     }
+
                                 });
 
                         });

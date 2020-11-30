@@ -80,6 +80,11 @@ button {
 
 .task-group ul {
     padding: 0;
+    margin-bottom: 0;
+}
+
+.task-group li {
+    padding-left: 0;
 }
 
 .task-group h2 {
@@ -163,4 +168,17 @@ button {
 
 .task-group.to-be-deleted {
     background: rgb(65, 0, 0);
+}
+
+.task-group h2 button {
+    background: none;
+    border: none;
+    float: right;
+    position: relative;
+    top: 4px;
+}
+
+.hint-add-task {
+    user-select: none;
+    color: #999;
 }
