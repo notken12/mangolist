@@ -68,7 +68,8 @@ function isNullOrWhitespace(str) {
             const el = {
                 messages: {
                     NEWGROUP: "New group",
-                    NEWTASK: "Add a task"
+                    NEWTASK: "Add a task",
+                    SELECTHINT: "Click to select and add a task"
                 },
                 TASKINPUT: $("#task-input"),
                 CREATETASK: $("#create-task"),
@@ -105,7 +106,7 @@ function isNullOrWhitespace(str) {
                         group.el.append(ul);
 
                         hint = $(document.createElement("div"));
-                        hint.text("Double-click to select and add a task");
+                        hint.text(that.messages.SELECTHINT);
                         hint.addClass("hint-add-task");
 
                         group.el.append(hint);
@@ -114,7 +115,7 @@ function isNullOrWhitespace(str) {
                             group.el.addClass("focused");
                         }
 
-                        group.el.dblclick(function () {
+                        group.el.click(function () {
                             taskGroups.setFocus(taskGroups.indexOf(group));
 
                         });
@@ -292,7 +293,7 @@ function isNullOrWhitespace(str) {
 
             const mainGroup = new TaskGroup("My Tasks", [], false, undefined, $("#main-group"));
 
-            mainGroup.el.dblclick(function () {
+            mainGroup.el.click(function () {
                 taskGroups.setFocus(taskGroups.indexOf(mainGroup));
 
             });
