@@ -218,7 +218,7 @@ function isNullOrWhitespace(str) {
         if (g.el)
           g.el.remove();
 
-        userRef.update({
+        userRef.set({
           taskgroups: firebase.firestore.FieldValue.arrayRemove(g.id)
         })
           .then(function() {
@@ -277,7 +277,7 @@ function isNullOrWhitespace(str) {
           .then(function(docRef) {
             group.id = docRef.id;
 
-            userRef.update({
+            userRef.set({
               taskgroups: firebase.firestore.FieldValue.arrayUnion(docRef.id)
             })
               .then(function() {
@@ -299,7 +299,7 @@ function isNullOrWhitespace(str) {
       });
 
       mainGroup.updateDb = function() {
-        userRef.update({
+        userRef.set({
           tasks: mainGroup.getTaskObjectsForDb()
         })
           .then(function() {
@@ -388,7 +388,7 @@ function isNullOrWhitespace(str) {
         }
       })
 
-      userRef.update({
+      userRef.set({
         displayName: user.displayName,
         email: user.email
       })
