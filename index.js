@@ -275,12 +275,14 @@ function isNullOrWhitespace(str) {
 
         db.collection("taskgroups").add(model)
           .then(function(docRef) {
+            console.log("Document successfully written!");
             group.id = docRef.id;
 
             userRef.set({
               taskgroups: firebase.firestore.FieldValue.arrayUnion(docRef.id)
             })
               .then(function() {
+                console.log("Document successfully written!");
                 el.updateView(group);
               });
           })
