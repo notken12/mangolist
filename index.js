@@ -393,7 +393,7 @@ function isNullOrWhitespace(str) {
       userRef.set({
         displayName: user.displayName,
         email: user.email
-      })
+      }, { merge: true })
         .then(function() {
           console.log("Document successfully written!");
         })
