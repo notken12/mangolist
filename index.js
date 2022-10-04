@@ -220,7 +220,7 @@ function isNullOrWhitespace(str) {
 
         userRef.set({
           taskgroups: firebase.firestore.FieldValue.arrayRemove(g.id)
-        })
+        }, { merge: true })
           .then(function() {
             console.log("Document successfully written!");
           })
@@ -280,7 +280,7 @@ function isNullOrWhitespace(str) {
 
             userRef.set({
               taskgroups: firebase.firestore.FieldValue.arrayUnion(docRef.id)
-            })
+            }, { merge: true })
               .then(function() {
                 console.log("Document successfully written!");
                 el.updateView(group);
@@ -303,7 +303,7 @@ function isNullOrWhitespace(str) {
       mainGroup.updateDb = function() {
         userRef.set({
           tasks: mainGroup.getTaskObjectsForDb()
-        })
+        }, { merge: true })
           .then(function() {
             console.log("Document successfully written!");
           })
