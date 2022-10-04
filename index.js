@@ -481,10 +481,6 @@ function isNullOrWhitespace(str) {
         signInSuccessUrl: '',
         signInOptions: [
           {
-            provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
-            requireDisplayName: true
-          },
-          {
             provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
             scopes: [
             ],
@@ -494,7 +490,6 @@ function isNullOrWhitespace(str) {
               prompt: 'select_account'
             }
           },
-          firebase.auth.GithubAuthProvider.PROVIDER_ID
         ],
         // Terms of service url.
         //tosUrl: '<your-tos-url>',
